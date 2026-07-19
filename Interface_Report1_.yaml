@@ -1,0 +1,80 @@
+---
+- name: Cisco Interface Troubleshooting Report
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_prompt:
+
+    - name: ticket_number
+      prompt: "Enter Ticket Number"
+      private: no
+
+    - name: router_ip
+      prompt: "Enter Hostname/IP Address"
+      private: no
+
+    - name: interface
+      prompt: "Enter Interface Number"
+      private: no
+
+    - name: ansible_user
+      prompt: "Enter Username"
+      private: no
+
+    - name: ansible_password
+      prompt: "Enter Password"
+      private: yes
+
+  tasks:
+
+    - name: Run interface troubleshooting commands
+      cisco.ios.ios_command:
+        commands:
+          - "show interface {{ interface }} | include Description|line protocol|rate|errors"
+          - "show log | include {{ interface }}"
+      vars:
+        ansible_connection: network_cli
+        ansible_network_os: cisco.ios.ios
+        ansible_host: "{{ router_ip }}"
+      register: command_output
+
+    - name: Display command output
+      debug:
+        msg:
+          - "================================================================================"
+          - "COMMAND: show interface {{ interface }} | include Description|line protocol|rate|errors"
+          - "{{ command_output.stdout[0] }}"
+          - ""
+          - "================================================================================"
+          - "COMMAND: show log | include {{ interface }}"
+          - "{{ command_output.stdout[1] }}"
+
+    - name: Print Troubleshooting Report
+      debug:
+        msg: |
+          ================================================================================
+          TROUBLESHOOTING REPORT
+          ================================================================================
+
+          Ticket Number    : {{ ticket_number }}
+          Hostname         : {{ router_ip }}
+          Interface Number : {{ interface }}
+
+          --------------------------------------------------------------------------------
+          Command:
+          show interface {{ interface }} | include Description|line protocol|rate|errors
+          --------------------------------------------------------------------------------
+
+          {{ command_output.stdout[0] }}
+
+          --------------------------------------------------------------------------------
+          Command:
+          show log | include {{ interface }}
+          --------------------------------------------------------------------------------
+
+          {{ command_output.stdout[1] }}
+
+          ================================================================================
+          End of Report
+          ================================================================================
