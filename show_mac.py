@@ -45,7 +45,7 @@ device = {
 # ---------------------------------------------------
 
 commands = [
-    f"show mac {MacAddress} ",
+    f"show arp | incl {MacAddress} ",
 ]
 
 results = []
